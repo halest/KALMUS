@@ -36,7 +36,10 @@ setup(name='kalmus',
       python_requires='>=3.10',
       install_requires=[
           'numpy>=1.23',
-          'opencv-python>=4.6',
+          # headless variant: same cv2 API, no X/GL system libs required.
+          # kalmus uses cv2 only for image-processing (VideoCapture, cvtColor,
+          # kmeans, grabCut, ...); the GUI is tkinter, never cv2.imshow.
+          'opencv-python-headless>=4.6',
           'scikit-image>=0.21',  # channel_axis kwarg replaces multichannel
           'matplotlib>=3.5',
           'scikit-learn>=1.1',
