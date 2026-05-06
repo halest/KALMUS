@@ -109,8 +109,11 @@ def compute_mode_color(image, bin_size=10):
     """
     image = flatten_image(image)
     image = image // bin_size
-    mode_color, counts = stats.mode(image, axis=0)
-    return (mode_color[0] * bin_size), counts
+    # scipy>=1.11 changed stats.mode default to keepdims=False; pin the shape
+    # explicitly so callers that expect (channels,) keep working across versions.
+    mode_result = stats.mode(image, axis=0, keepdims=False)
+    mode_color, counts = mode_result.mode, mode_result.count
+    return mode_color * bin_size, counts
 
 
 def compute_mean_color(image):
