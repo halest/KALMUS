@@ -4,7 +4,7 @@ Version2
 """
 
 import tkinter
-from tkinter.messagebox import askokcancel, showinfo, showerror
+from tkinter.messagebox import askokcancel, showerror
 
 from kalmus.tkinter_windows.GenerateBarcodeWindow import GenerateBarcodeWindow
 from kalmus.tkinter_windows.SaveBarcodeWindow import SaveBarcodeWindow
@@ -167,7 +167,9 @@ class MainWindow():
                                          justify=tkinter.LEFT)
         self.color_label.grid(row=8, column=4, rowspan=1, padx=0, sticky=tkinter.W)
 
-        self.generate_window_opened = False
+        # Reference to the open Generate-Barcode Tk window (None if not open).
+        # Lets us focus an existing window instead of nagging the user.
+        self._generate_window_ref = None
 
         # Button to generate the barcode
         button_generate = tkinter.Button(master=self.root, text="Generate Barcode",
@@ -230,7 +232,7 @@ class MainWindow():
         Return (cancel the quit) if the Generate Barcode window is still open.
         """
         # Check if generate barcode window is opened
-        if self.generate_window_opened:
+        if self._generate_window_ref is not None:
             # If it is opened show an error
             showerror("Generate Barcode Window is Opened", "Generate Barcode window is still opened!\n"
                                                            "Please close the Generate Barcode window before Quit.")
@@ -290,14 +292,21 @@ class MainWindow():
 
     def generate_barcode(self):
         """
-        Instantiate the GenerateBarcodeWindow
+        Open the GenerateBarcodeWindow, or focus the existing one if already open.
         """
-        if not self.generate_window_opened:
-            self.generate_window_opened = True
-            GenerateBarcodeWindow(self.barcode_gn, self.barcodes_stack)
-            self.generate_window_opened = False
-        else:
-            showinfo("Generate Barcode window is Opened", "Generate Barcode Window is already opened.")
+        existing = self._generate_window_ref
+        if existing is not None:
+            try:
+                existing.deiconify()   # restore if minimised
+                existing.lift()        # raise above other windows
+                existing.focus_force()
+                return
+            except tkinter.TclError:
+                # Stale reference (window was destroyed without going through quit()).
+                self._generate_window_ref = None
+        # GenerateBarcodeWindow registers itself on this main window before entering its mainloop;
+        # see GenerateBarcodeWindow.__init__.
+        GenerateBarcodeWindow(self.barcode_gn, self.barcodes_stack, main_window=self)
 
     def save_barcode_on_stack(self):
         """

@@ -18,20 +18,29 @@ class GenerateBarcodeWindow():
     GUI window for user to generate the barcode from a video file
     """
 
-    def __init__(self, barcode_generator, barcode_stack):
+    def __init__(self, barcode_generator, barcode_stack, main_window=None):
         """
         Initialize
 
         :param barcode_generator: The barcode generator
         :param barcode_stack: The dictionary that stores all the barcode on the memory
+        :param main_window: Optional MainWindow instance. If given, this window registers
+            itself there so a second click on "Generate Barcode" focuses this window
+            instead of opening a duplicate / showing a warning.
         """
         self.barcode_generator = barcode_generator
         self.barcode_stack = barcode_stack
+        self._main_window = main_window
 
         # Initialize the window
         self.window = tkinter.Tk()
         self.window.wm_title("Barcode Generator")
         self.window.iconbitmap(resource_path("kalmus_icon.ico"))
+
+        # Register on the main window before mainloop blocks, so the main window can
+        # focus this Tk window when the user clicks "Generate Barcode" again.
+        if main_window is not None:
+            main_window._generate_window_ref = self.window
 
         # A temporary meta data dictionary that will hold the meta information given by the user
         self.meta_data_dict = {}
@@ -272,6 +281,8 @@ class GenerateBarcodeWindow():
         """
         Quit the main window
         """
+        if self._main_window is not None:
+            self._main_window._generate_window_ref = None
         self.window.quit()
         self.window.destroy()
 
