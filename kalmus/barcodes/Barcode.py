@@ -67,6 +67,9 @@ class Barcode:
         self.total_frames = total_frames
 
         self.video = None
+        # Path to the source video this barcode was generated from. Persisted via
+        # save_as_json so the title bar can show the film filename for loaded barcodes.
+        self.video_path = ""
         self.film_length_in_frames = 0
 
         self.fps = None
@@ -95,6 +98,7 @@ class Barcode:
         :param video_path_name: The path to the video file
         :type video_path_name: str
         """
+        self.video_path = video_path_name
         self.video = cv2.VideoCapture(video_path_name)
 
         # Get the fps of the video

@@ -171,49 +171,60 @@ class MainWindow():
         # Lets us focus an existing window instead of nagging the user.
         self._generate_window_ref = None
 
+        # Group all left-column buttons in a single Frame with uniform packing.
+        # Putting them directly on the root grid let tk's row-distribution algorithm
+        # spread them unevenly to match the figure's rowspan; a Frame decouples that.
+        button_frame = tkinter.Frame(master=self.root, bg='#85C1FA')
+        button_frame.grid(row=0, column=0, rowspan=9, sticky="ns", padx=4, pady=4)
+
+        button_width = 16  # fits the longest label ("Generate Barcode")
+        button_pad = {"fill": "x", "pady": 4, "padx": 4}
+
         # Button to generate the barcode
-        button_generate = tkinter.Button(master=self.root, text="Generate Barcode",
-                                         command=self.generate_barcode)
-        button_generate.grid(row=0, column=0, padx=3)
+        button_generate = tkinter.Button(master=button_frame, text="Generate Barcode",
+                                         width=button_width, command=self.generate_barcode)
+        button_generate.pack(**button_pad)
 
         # Button to load the barcode from existed json files
-        button_load = tkinter.Button(master=self.root, text="Load JSON",
-                                     command=self.load_json_barcode)
-        button_load.grid(row=1, column=0)
+        button_load = tkinter.Button(master=button_frame, text="Load JSON",
+                                     width=button_width, command=self.load_json_barcode)
+        button_load.pack(**button_pad)
 
         # Button to load the barcode from the memory stack
-        button_load_stack = tkinter.Button(master=self.root, text="Load Memory",
-                                           command=self.load_stack_barcode)
-        button_load_stack.grid(row=2, column=0)
+        button_load_stack = tkinter.Button(master=button_frame, text="Load Memory",
+                                           width=button_width, command=self.load_stack_barcode)
+        button_load_stack.pack(**button_pad)
 
         # Button to reshape the barcode displayed in the main window
-        button_reshape_barcode = tkinter.Button(master=self.root, text="Reshape Barcode",
-                                                command=self.reshape_barcode)
-        button_reshape_barcode.grid(row=3, column=0)
+        button_reshape_barcode = tkinter.Button(master=button_frame, text="Reshape Barcode",
+                                                width=button_width, command=self.reshape_barcode)
+        button_reshape_barcode.pack(**button_pad)
 
         # Button to save the barcode into json files
-        button_save_json = tkinter.Button(master=self.root, text="Save JSON",
-                                          command=self.save_barcode_on_stack)
-        button_save_json.grid(row=4, column=0)
+        button_save_json = tkinter.Button(master=button_frame, text="Save JSON",
+                                          width=button_width, command=self.save_barcode_on_stack)
+        button_save_json.pack(**button_pad)
 
         # Button to save the barcode displayed into the image
-        button_save_image = tkinter.Button(master=self.root, text="Save Image",
-                                           command=self.save_image_from_display)
-        button_save_image.grid(row=5, column=0)
+        button_save_image = tkinter.Button(master=button_frame, text="Save Image",
+                                           width=button_width, command=self.save_image_from_display)
+        button_save_image.pack(**button_pad)
 
         # Button to inspect the barcode in details
-        button_barcode = tkinter.Button(master=self.root, text="Inspect Barcode",
-                                        command=self.show_barcode)
-        button_barcode.grid(row=6, column=0)
+        button_barcode = tkinter.Button(master=button_frame, text="Inspect Barcode",
+                                        width=button_width, command=self.show_barcode)
+        button_barcode.pack(**button_pad)
 
         # Button to show the statistics of the barcode
-        button_stats_info = tkinter.Button(master=self.root, text="Stats Info",
-                                           command=self.stats_info)
-        button_stats_info.grid(row=7, column=0)
+        button_stats_info = tkinter.Button(master=button_frame, text="Stats Info",
+                                           width=button_width, command=self.stats_info)
+        button_stats_info.pack(**button_pad)
 
-        # Button to quit the main window
-        button_quit = tkinter.Button(master=self.root, text="Quit", command=self.close_window)
-        button_quit.grid(row=8, column=0)
+        # Button to quit the main window — extra top-pad keeps it visually separated
+        # from the action buttons above so users don't fat-finger Quit.
+        button_quit = tkinter.Button(master=button_frame, text="Quit",
+                                     width=button_width, command=self.close_window)
+        button_quit.pack(fill="x", pady=(24, 4), padx=4)
 
         # Button to check the meta data of the displayed barcodes
         button_check_meta = tkinter.Button(master=self.root, text="Check Meta Info", command=self.check_meta_info)
@@ -221,6 +232,20 @@ class MainWindow():
 
         # Close the window mainloop if user try to close the window
         self.root.protocol("WM_DELETE_WINDOW", self.close_window)
+
+        # Center the window on the user's screen, clipping the requested size to fit
+        # so the figure doesn't hang off the edge on smaller displays (1366x768, 1920x1080).
+        # update_idletasks() forces tk to compute child geometry before we read winfo_req*.
+        self.root.update_idletasks()
+        req_w = self.root.winfo_reqwidth()
+        req_h = self.root.winfo_reqheight()
+        screen_w = self.root.winfo_screenwidth()
+        screen_h = self.root.winfo_screenheight()
+        final_w = min(req_w, int(screen_w * 0.95))
+        final_h = min(req_h, int(screen_h * 0.92))
+        x = max(0, (screen_w - final_w) // 2)
+        y = max(0, (screen_h - final_h) // 2)
+        self.root.geometry(f"{final_w}x{final_h}+{x}+{y}")
 
         # Start the main window
         self.root.mainloop()

@@ -69,6 +69,9 @@ def build_barcode_from_json(path_to_json, barcode_type="Color"):
 
     barcode.film_length_in_frames = int(object_dict["film_length_in_frames"])
 
+    # video_path was added later; tolerate older JSON files that don't have it.
+    barcode.video_path = object_dict.get("video_path", "")
+
     if "save_frames_in_generation" in object_dict.keys():
         if object_dict["save_frames_in_generation"]:
             barcode.save_frames_in_generation = object_dict["save_frames_in_generation"]

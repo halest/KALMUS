@@ -165,6 +165,10 @@ def update_graph(barcode_1, barcode_2, axes, bin_step=5):
     # Update the histogram of the barcode 2
     update_hist(barcode_2, ax=axes[1][1], bin_step=bin_step)
 
+    # Refit margins so labels (e.g. "10.67s per column" after a Reshape) don't get
+    # clipped by the original tight_layout that ran at MainWindow init.
+    axes[0][0].figure.tight_layout()
+
 
 def update_axes_ticks(barcode1, barcode2, axes):
     """
@@ -204,6 +208,13 @@ def update_axes_ticks(barcode1, barcode2, axes):
         axes[1][0].yaxis.set_major_formatter(FuncFormatter(get_seconds_str_xticks))
 
 
+def _video_name_for_title(barcode):
+    """Return the source video's filename for the title bar, or an empty string if the
+    barcode has no video_path (e.g. older JSON files written before video_path existed)."""
+    path = getattr(barcode, "video_path", "") or ""
+    return os.path.basename(path)
+
+
 def update_axes_title(axes, barcode_1, barcode_2):
     """
     Update the title of the plotted axes (in place)
@@ -217,6 +228,12 @@ def update_axes_title(axes, barcode_1, barcode_2):
 
     keys = ["Film Title", "Produced Year", "Genre"]
 
+    # Source video filename first — most users want to identify the barcode by
+    # its source file, with parameters as secondary detail.
+    video_name_1 = _video_name_for_title(barcode_1)
+    if video_name_1:
+        title_1 += "    Video: {:s}".format(video_name_1)
+
     # Update the meta data into the title of the plotted figure
     if barcode_1.meta_data is not None:
         for key in keys:
@@ -226,6 +243,10 @@ def update_axes_title(axes, barcode_1, barcode_2):
     # Update the Frame sampling type and color/brightness metric into the title
     title_1 += "    Frame Type:{:s}    {:s} Metric:{:s}".format(barcode_1.frame_type, barcode_1.barcode_type,
                                                                 barcode_1.color_metric)
+
+    video_name_2 = _video_name_for_title(barcode_2)
+    if video_name_2:
+        title_2 += "    Video: {:s}".format(video_name_2)
 
     # Update the meta data into the title of the plotted figure
     if barcode_2.meta_data is not None:
